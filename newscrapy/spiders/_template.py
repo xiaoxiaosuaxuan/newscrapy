@@ -1,0 +1,48 @@
+# -*- coding: utf-8 -*-
+from scrapy import FormRequest
+import re
+from newscrapy.items import NewscrapyItem
+from scrapy.spiders import Rule, CrawlSpider
+from scrapy.linkextractors import LinkExtractor
+from newscrapy.tools import dateGen
+from urllib import parse
+
+
+class mySpider(CrawlSpider):
+    name = ""
+    newspapers = ""
+    allowed_domains = ['']
+    
+    def start_requests(self):
+        dates = dateGen(self.start, self.end, "")
+        template = ""
+        for d in dates:
+            yield FormRequest(template.format(date = d))
+
+    rules = (
+        Rule(LinkExtractor(allow=(''))),
+        Rule(LinkExtractor(allow=('')), callback="parse_item")
+    )
+
+    def parse_item(self, response):
+        try:
+            title = None
+            content = None
+            url = response.url
+            date = re.search('', url).group(1)
+            date = '-'.join([])
+            imgs = None
+            imgs = [parse.urljoin(url, imgurl) for imgurl in imgs]
+            html = response.text
+        except Exception as e:
+            return
+        
+        item = NewscrapyItem()
+        item['title'] = title
+        item['content'] = content
+        item['date'] = date
+        item['imgs'] = imgs
+        item['url'] = response.url
+        item['newspaper'] = self.newspapers
+        item['html'] = self.html
+        yield item

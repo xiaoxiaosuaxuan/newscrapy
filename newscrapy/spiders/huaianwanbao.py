@@ -15,7 +15,7 @@ class mySpider(CrawlSpider):
 
     def start_requests(self):
         dates = dateGen(self.start, self.end, "%Y%m/%d")
-        template = "http://szb.hynews.net/haby/hawb/pc/layout/{date}/node_01.html"
+        template = "http://szb.hynews.net/haby/hhwb/pc/layout/{date}/node_01.html"
         for d in dates:
             yield FormRequest(template.format(date= d ))
 

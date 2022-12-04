@@ -9,13 +9,13 @@ from urllib import parse
 
 
 class mySpider(CrawlSpider):
-    name = "baotoudaily"
-    newspapers = "包头日报"
-    allowed_domains = ['customupload.baotounews.com']
-    
+    name = "hulunbeierdaily"
+    newspapers = "呼伦贝尔日报"
+    allowed_domains = ['szb.hlbrdaily.com.cn']
+
     def start_requests(self):
         dates = dateGen(self.start, self.end, "%Y-%m/%d")
-        template = "http://customupload.baotounews.com/nepaper/btrb/html/{date}/node_3.htm"
+        template = "http://szb.hlbrdaily.com.cn:8888/html/{date}/node_21.htm"
         for d in dates:
             yield FormRequest(template.format(date = d))
 
@@ -26,17 +26,17 @@ class mySpider(CrawlSpider):
 
     def parse_item(self, response):
         try:
-            title = response.xpath("//div[@class='text']//tbody").xpath("string(.)").get()
-            content = response.xpath("//div[@id='main']").xpath("string(.)").get()
+            title = response.xpath("//tr[@valign='top']//strong").xpath("string(.)").get()
+            content = response.xpath("//div[@id='ozoom']").xpath("string(.)").get()
             url = response.url
             date = re.search("html/(\d+-\d+/\d+)/content", url).group(1)
             date = '-'.join([date[0:4], date[5:7], date[8:10]])
-            imgs = response.xpath("//div[@id='main']//img/@src").getall()
+            imgs = response.xpath("//td[@align='center']//img/@src").getall()
             imgs = [parse.urljoin(url, imgurl) for imgurl in imgs]
             html = response.text
         except Exception as e:
             return
-        
+
         item = NewscrapyItem()
         item['title'] = title
         item['content'] = content

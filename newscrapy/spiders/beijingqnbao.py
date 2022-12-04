@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from scrapy import FormRequest
 import re
 from newscrapy.items import NewscrapyItem
@@ -9,29 +8,32 @@ from urllib import parse
 
 
 class mySpider(CrawlSpider):
-    name = "baotoudaily"
-    newspapers = "包头日报"
-    allowed_domains = ['customupload.baotounews.com']
+    name = "beijingqnbao"
+    newspapers = "北京青年报"
+    allowed_domains = ['epaper.ynet.com']
     
     def start_requests(self):
         dates = dateGen(self.start, self.end, "%Y-%m/%d")
-        template = "http://customupload.baotounews.com/nepaper/btrb/html/{date}/node_3.htm"
+        template = "http://epaper.ynet.com/html/{date}/node_1334.htm"
         for d in dates:
             yield FormRequest(template.format(date = d))
 
     rules = (
-        Rule(LinkExtractor(allow=('html/\d+-\d+/\d+/node\w+.htm'))),
-        Rule(LinkExtractor(allow=('html/\d+-\d+/\d+/content\w+.htm')), callback="parse_item")
+        Rule(LinkExtractor(allow=('html/\d+-\d+/\d+/node_\d+.htm'))),
+        Rule(LinkExtractor(allow=('html/\d+-\d+/\d+/content_\d+.htm?')), callback="parse_item")
     )
 
     def parse_item(self, response):
         try:
-            title = response.xpath("//div[@class='text']//tbody").xpath("string(.)").get()
-            content = response.xpath("//div[@id='main']").xpath("string(.)").get()
+            body = response.xpath("//div[@class='rit']")
+            foundertitle = body.xpath(".//h1").xpath("string(.)").get()
+            subtitle = body.xpath(".//p[@class='fbiaot']").xpath("string(.)").get()
+            title = foundertitle+' '+subtitle
+            content = body.xpath(".//div[@class='contnt']//p").xpath("string(.)").getall()
             url = response.url
             date = re.search("html/(\d+-\d+/\d+)/content", url).group(1)
             date = '-'.join([date[0:4], date[5:7], date[8:10]])
-            imgs = response.xpath("//div[@id='main']//img/@src").getall()
+            imgs = body.xpath(".//div[@class='contnt']//table//img/@src").getall()
             imgs = [parse.urljoin(url, imgurl) for imgurl in imgs]
             html = response.text
         except Exception as e:

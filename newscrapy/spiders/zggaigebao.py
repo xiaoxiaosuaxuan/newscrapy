@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from scrapy import FormRequest
 import re
 from newscrapy.items import NewscrapyItem
@@ -9,31 +8,32 @@ from urllib import parse
 
 
 class mySpider(CrawlSpider):
-    name = "wuhudaily"
-    newspapers = "芜湖日报"
-    allowed_domains = ['epaper.wuhunews.cn']
-
+    name = "zggaigebao"
+    newspapers = "中国改革报"
+    allowed_domains = ['www.cfgw.net.cn']
+    
     def start_requests(self):
         dates = dateGen(self.start, self.end, "%Y%m/%d")
-        template = "http://epaper.wuhunews.cn/whrb/pc/layout/{date}/lRB01.html"
+        template = "http://www.cfgw.net.cn/epaper/{date}/node_01.htm"
         for d in dates:
             yield FormRequest(template.format(date = d))
 
     rules = (
-        Rule(LinkExtractor(allow=('layout/\d+/\d+/\w+.html'))),
-        Rule(LinkExtractor(allow=('content/\d+/\d+/\w+.html')), callback="parse_item")
+        Rule(LinkExtractor(allow=('epaper/\d+\d+/\d+/node_\d+.htm'))),
+        Rule(LinkExtractor(allow=('epaper/content/\d+/\d+/content_\d+.htm')), callback="parse_item")
     )
 
     def parse_item(self, response):
         try:
-            title1 = response.xpath("//*[@id='PreTitle']").xpath('string(.)').get()
-            title2 = response.xpath("//*[@id='Title']").xpath('string(.)').get()
-            title = title1 + ' ' + title2
-            content = response.xpath("//founder-content").xpath('string(.)').get()
+            body = response.xpath("//div[@class='detail-art']")
+            foundertitle = body.xpath(".//h2").xpath("string(.)").get()
+            subtitle = body.xpath(".//p[@id='SubTitle']").xpath("string(.)").get()
+            title = foundertitle+' '+subtitle
+            content = body.xpath(".//div[@id='ozoom']//founder-content//p").xpath("string(.)").getall()
             url = response.url
-            date = re.search("content/(\d+/\d+)/", url).group(1)
+            date = re.search("content/(\d+\d+/\d+)/content", url).group(1)
             date = '-'.join([date[0:4], date[4:6], date[7:9]])
-            imgs = response.xpath("//div[@class='attachment']//img/@src").getall()
+            imgs = body.xpath(".//div[@class='attachment']//img/@src").getall()
             imgs = [parse.urljoin(url, imgurl) for imgurl in imgs]
             html = response.text
         except Exception as e:

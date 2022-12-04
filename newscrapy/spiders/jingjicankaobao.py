@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from scrapy import FormRequest
 import re
 from newscrapy.items import NewscrapyItem
@@ -9,33 +8,31 @@ from urllib import parse
 
 
 class mySpider(CrawlSpider):
-    name = "workerdaily"
-    newspapers = "工人日报"
-    allowed_domains = ['www.workercn.cn']
-
+    name = "jingjicankaobao"
+    newspapers = "经济参考报"
+    allowed_domains = ['dz.jjckb.cn']
+    
     def start_requests(self):
-        dates = dateGen(self.start, self.end, "%Y/%m/%d")
-        template = "https://www.workercn.cn/papers/grrb/{date}/1/page.html"
+        dates = dateGen(self.start, self.end, "%Y-%m/%d")
+        template = "http://dz.jjckb.cn/www/pages/webpage2009/html/{date}/node_2.htm"
         for d in dates:
             yield FormRequest(template.format(date = d))
 
     rules = (
-        Rule(LinkExtractor(allow=('grrb/\d+/\d+/\d+/\d+/page.html'), restrict_xpaths="//*[@id='pageTitle']")),
-        Rule(LinkExtractor(allow=('grrb/\d+/\d+/\d+/\d+/news-\d+.html')), callback="parse_item")
+        Rule(LinkExtractor(allow=('www/pages/webpage2009/html/\d+-\d+/\d+/node_\d+.htm'))),
+        Rule(LinkExtractor(allow=('www/pages/webpage2009/html/\d+-\d+/\d+/content_\d+.htm')), callback="parse_item")
     )
 
     def parse_item(self, response):
         try:
-            title1 = response.xpath("//*[@id='pretitle']").xpath("string(.)").get()
-            title2 = response.xpath("//*[@id='ctitle']").xpath("string(.)").get()
-            title = title1 + ' ' + title2
-            content = response.xpath("//*[@id='ccontent']").xpath('string(.)').get()
+            title = response.xpath("//td[@class='hei16b']").xpath("string(.)").get()
+            content = response.xpath("//td[@class='black14']//p").xpath("string(.)").getall()
             url = response.url
-            date = re.search('grrb/(\d+/\d+/\d+)/', url).group(1)
+            date = re.search("html/(\d+-\d+/\d+)/content", url).group(1)
             date = '-'.join([date[0:4], date[5:7], date[8:10]])
-            imgs = response.xpath("//*[@id='imgs']//img/@src").getall()
+            imgs = response.xpath("//td[@class='hei14']//img/@src").getall()
             imgs = [parse.urljoin(url, imgurl) for imgurl in imgs]
-            html  =response.text
+            html = response.text
         except Exception as e:
             return
         
@@ -48,4 +45,3 @@ class mySpider(CrawlSpider):
         item['newspaper'] = self.newspapers
         item['html'] = html
         yield item
-

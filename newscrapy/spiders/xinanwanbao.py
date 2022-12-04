@@ -9,20 +9,21 @@ from urllib import parse
 
 
 class mySpider(CrawlSpider):
-    name = "chizhoudaily"
-    newspapers = "池州日报"
-    allowed_domains = ['szb.chiznews.com']
+    name = "xinanwanbao"
+    newspapers = "新安晚报"
+    allowed_domains = ['epaper.ahwang.cn']
 
     def start_requests(self):
         dates = dateGen(self.start, self.end, "%Y%m%d")
-        template = "http://szb.chiznews.com/czrb/{date}/html/index.htm"
+        template = "http://epaper.ahwang.cn/xawb/{date}/html/index.htm"
         for d in dates:
             yield FormRequest(template.format(date = d))
 
     rules = (
-        Rule(LinkExtractor(allow=('\d+/html/index.htm'))),
-        Rule(LinkExtractor(allow=('\d+/html/page_\d+.htm'))),
-        Rule(LinkExtractor(allow=('\d+/html/content_\d+.htm')),callback='parse_item')
+        Rule(LinkExtractor(allow=('xawb/\d+\d+\d+/html/index.htm'))),
+        Rule(LinkExtractor(allow=('xawb/\d+\d+\d+/html/page_\d+.htm'))),
+        Rule(LinkExtractor(allow=('xawb/\d+\d+\d+/html/index_content_\d+.htm')),callback='parse_item'),
+        Rule(LinkExtractor(allow=('xawb/\d+\d+\d+/html/page_\d+_content_\d+.htm')),callback='parse_item')
     )
 
     def parse_item(self, response):
@@ -35,7 +36,7 @@ class mySpider(CrawlSpider):
             imgs = body.xpath(".//img/@src").getall()
             imgs = [parse.urljoin(url, imgurl) for imgurl in imgs]
             url = response.url
-            date = re.search('czrb/(\d+)/html', url).group(1)
+            date = re.search('xawb/(\d+)/html', url).group(1)
             date = '-'.join([date[0:4],date[4:6],date[6:8]])
             html = response.text
         except Exception as e:

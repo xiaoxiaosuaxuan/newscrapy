@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from subprocess import call
 from scrapy import FormRequest
 import re
 from newscrapy.items import NewscrapyItem
@@ -9,34 +10,35 @@ from urllib import parse
 
 
 class mySpider(CrawlSpider):
-    name = "baotoudaily"
-    newspapers = "包头日报"
-    allowed_domains = ['customupload.baotounews.com']
-    
+    name = "luzhongchenbao"
+    newspapers = "鲁中晨报"
+    allowed_domains = ['epaper.lzcb.com']
+
     def start_requests(self):
-        dates = dateGen(self.start, self.end, "%Y-%m/%d")
-        template = "http://customupload.baotounews.com/nepaper/btrb/html/{date}/node_3.htm"
+        dates = dateGen(self.start, self.end, "%Y%m%d")
+        template = "http://epaper.lzcb.com/lzcb/content/{date}/Page01a.htm"
         for d in dates:
-            yield FormRequest(template.format(date = d))
+            yield FormRequest(template.format(date=d))
 
     rules = (
-        Rule(LinkExtractor(allow=('html/\d+-\d+/\d+/node\w+.htm'))),
-        Rule(LinkExtractor(allow=('html/\d+-\d+/\d+/content\w+.htm')), callback="parse_item")
+        Rule(LinkExtractor(allow=('\d+/Page01a.htm'))),
+        Rule(LinkExtractor(allow=('\d+/Articel\w+.htm')), callback="parse_item")
     )
 
     def parse_item(self, response):
         try:
-            title = response.xpath("//div[@class='text']//tbody").xpath("string(.)").get()
-            content = response.xpath("//div[@id='main']").xpath("string(.)").get()
+            title = response.xpath("//span[@id='contenttitle']").xpath("string(.)").get()
+            content = response.xpath("//span[@id='contenttext']").xpath("string(.)").get()
             url = response.url
-            date = re.search("html/(\d+-\d+/\d+)/content", url).group(1)
-            date = '-'.join([date[0:4], date[5:7], date[8:10]])
-            imgs = response.xpath("//div[@id='main']//img/@src").getall()
+            date = re.search("content/(\d+)/Articel", url).group(1)
+            date = '-'.join([date[0:4], date[4:6], date[6:8]])
+            imgs = response.xpath("//a[@target='_blank']/img/@src").getall()
             imgs = [parse.urljoin(url, imgurl) for imgurl in imgs]
             html = response.text
         except Exception as e:
+            print(e)
             return
-        
+
         item = NewscrapyItem()
         item['title'] = title
         item['content'] = content

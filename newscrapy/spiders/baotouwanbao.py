@@ -9,15 +9,15 @@ from urllib import parse
 
 
 class mySpider(CrawlSpider):
-    name = "baotoudaily"
-    newspapers = "包头日报"
+    name = "baotouwanbao"
+    newspapers = "包头晚报"
     allowed_domains = ['customupload.baotounews.com']
-    
+
     def start_requests(self):
         dates = dateGen(self.start, self.end, "%Y-%m/%d")
-        template = "http://customupload.baotounews.com/nepaper/btrb/html/{date}/node_3.htm"
+        template = "http://customupload.baotounews.com/nepaper/btwb/html/{date}/node_56.htm"
         for d in dates:
-            yield FormRequest(template.format(date = d))
+            yield FormRequest(template.format(date=d))
 
     rules = (
         Rule(LinkExtractor(allow=('html/\d+-\d+/\d+/node\w+.htm'))),
@@ -36,7 +36,7 @@ class mySpider(CrawlSpider):
             html = response.text
         except Exception as e:
             return
-        
+
         item = NewscrapyItem()
         item['title'] = title
         item['content'] = content

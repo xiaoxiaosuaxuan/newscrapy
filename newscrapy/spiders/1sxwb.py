@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-from subprocess import call
 from scrapy import FormRequest
 import re
 from newscrapy.items import NewscrapyItem
@@ -10,33 +8,32 @@ from urllib import parse
 
 
 class mySpider(CrawlSpider):
-    name = "fazhidaily"
-    newspapers = "法制日报"
-    allowed_domains = ['epaper.legaldaily.com.cn']
+    name = "sxwb"
+    newspapers = "山西晚报"
+    allowed_domains = ['epaper.sxrb.com']
     
     def start_requests(self):
         dates = dateGen(self.start, self.end, "%Y%m%d")
-        template = "http://epaper.legaldaily.com.cn/fzrb/content/{date}/Page01TB.htm"
+        template = "http://epaper.sxrb.com/shtml/sxwb/{date}/v01.shtml"
         for d in dates:
             yield FormRequest(template.format(date = d))
 
     rules = (
-        Rule(LinkExtractor(allow=('\d+/Page01TB.htm'))),
-        Rule(LinkExtractor(allow=('\d+/Articel\w+.htm')), callback="parse_item")
+        Rule(LinkExtractor(allow=('shtml/sxwb/\d+/v\d+.shtml'))),
+        Rule(LinkExtractor(allow=('shtml/sxwb/\d+/\d+.shtml')), callback="parse_item")
     )
 
     def parse_item(self, response):
         try:
-            title = response.xpath("//span[@align='center']/strong").xpath("string(.)").get()
-            content = response.xpath("//span[@id='oldcontenttext']").xpath("string(.)").get()
+            title = response.xpath(".//h2[@class='detConTit']").xpath("string(.)").get()
+            content = response.xpath(".//div[@class='details']//p").xpath("string(.)").getall()
             url = response.url
-            date = re.search("content/(\d+)/Articel", url).group(1)
-            date = '-'.join([date[0:4],date[4:6],date[6:8]])
-            imgs = response.xpath("//a[@target='_blank']/img/@src").getall()
+            date = re.search("sxwb/(\d+)/\d+", url).group(1)
+            date = '-'.join([date[0:4], date[4:6], date[6:8]])
+            imgs = response.xpath(".//div[@class='detPic']//img/@src").getall()
             imgs = [parse.urljoin(url, imgurl) for imgurl in imgs]
             html = response.text
         except Exception as e:
-            print(e)
             return
         
         item = NewscrapyItem()

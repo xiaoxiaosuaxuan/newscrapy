@@ -10,29 +10,30 @@ from urllib import parse
 
 
 class mySpider(CrawlSpider):
-    name = "fazhidaily"
-    newspapers = "法制日报"
-    allowed_domains = ['epaper.legaldaily.com.cn']
+    name = "zggsb"
+    newspapers = "中国工商报"
+    allowed_domains = ['mt.cmrnn.com.cn']
     
     def start_requests(self):
         dates = dateGen(self.start, self.end, "%Y%m%d")
-        template = "http://epaper.legaldaily.com.cn/fzrb/content/{date}/Page01TB.htm"
+        template = "http://mt.cmrnn.com.cn/zggsb/{date}/paper.html"
         for d in dates:
             yield FormRequest(template.format(date = d))
 
     rules = (
-        Rule(LinkExtractor(allow=('\d+/Page01TB.htm'))),
-        Rule(LinkExtractor(allow=('\d+/Articel\w+.htm')), callback="parse_item")
+        Rule(LinkExtractor(allow=('zggsb/\d+/paper.html'))),
+        Rule(LinkExtractor(allow=('zggsb/\d+/\d+.html')), callback="parse_item")
     )
 
     def parse_item(self, response):
         try:
-            title = response.xpath("//span[@align='center']/strong").xpath("string(.)").get()
-            content = response.xpath("//span[@id='oldcontenttext']").xpath("string(.)").get()
+            body = response.xpath("div[@id='article-content']")
+            title = body.xpath("//h2").xpath("string(.)").get()
+            content = response.xpath("//div[@class='content_p']//p").xpath("string(.)").getall()
             url = response.url
-            date = re.search("content/(\d+)/Articel", url).group(1)
+            date = re.search("zggsb/(\d+)/\d+", url).group(1)
             date = '-'.join([date[0:4],date[4:6],date[6:8]])
-            imgs = response.xpath("//a[@target='_blank']/img/@src").getall()
+            imgs = response.xpath("//div[@class='content_p']/img/@src").getall()
             imgs = [parse.urljoin(url, imgurl) for imgurl in imgs]
             html = response.text
         except Exception as e:

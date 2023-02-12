@@ -9,31 +9,29 @@ from urllib import parse
 
 
 class mySpider(CrawlSpider):
-    name = "workerdaily"
-    newspapers = "工人日报"
-    allowed_domains = ['www.workercn.cn']
+    name = "dftiyubao"
+    newspapers = "东方体育报"
+    allowed_domains = ['paper.xinmin.cn']
 
     def start_requests(self):
-        dates = dateGen(self.start, self.end, "%Y/%m/%d")
-        template = "https://www.workercn.cn/papers/grrb/{date}/1/page.html"
+        dates = dateGen(self.start, self.end, "%Y-%m-%d")
+        template = "https://paper.xinmin.cn/html/dfsports/{date}/1.html"
         for d in dates:
             yield FormRequest(template.format(date = d))
 
     rules = (
-        Rule(LinkExtractor(allow=('grrb/\d+/\d+/\d+/\d+/page.html'), restrict_xpaths="//*[@id='pageTitle']")),
-        Rule(LinkExtractor(allow=('grrb/\d+/\d+/\d+/\d+/news-\d+.html')), callback="parse_item")
+        Rule(LinkExtractor(allow=('html/dfsports/\d+-\d+-\d+/\d+.htm'))),
+        Rule(LinkExtractor(allow=('html/dfsports/\d+-\d+-\d+/A\d+/\d+.htm')), callback="parse_item")
     )
 
     def parse_item(self, response):
         try:
-            title1 = response.xpath("//*[@id='pretitle']").xpath("string(.)").get()
-            title2 = response.xpath("//*[@id='ctitle']").xpath("string(.)").get()
-            title = title1 + ' ' + title2
-            content = response.xpath("//*[@id='ccontent']").xpath('string(.)').get()
+            title = response.xpath("//h2[@class='dzb-title-box']").xpath("string(.)").get()
+            content = response.xpath("//p[@class='dzb-desc-box']").xpath('string(.)').getall()
             url = response.url
-            date = re.search('grrb/(\d+/\d+/\d+)/', url).group(1)
+            date = re.search('dfsports/(\d+-\d+-\d+)/', url).group(1)
             date = '-'.join([date[0:4], date[5:7], date[8:10]])
-            imgs = response.xpath("//*[@id='imgs']//img/@src").getall()
+            imgs = response.xpath("//p[@class='dzb-img-box']//img/@src").getall()
             imgs = [parse.urljoin(url, imgurl) for imgurl in imgs]
             html  =response.text
         except Exception as e:
@@ -48,4 +46,3 @@ class mySpider(CrawlSpider):
         item['newspaper'] = self.newspapers
         item['html'] = html
         yield item
-

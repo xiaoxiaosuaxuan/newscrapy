@@ -9,33 +9,31 @@ from urllib import parse
 
 
 class mySpider(CrawlSpider):
-    name = "changjidaily"
-    newspapers = "昌吉日报"
-    allowed_domains = ['218.31.200.249']
+    name = "yicaidaily"
+    newspapers = "第一财经日报"
+    allowed_domains = ['www.yicai.com']
 
     def start_requests(self):
         dates = dateGen(self.start, self.end, "%Y%m/%d")
-        template = "http://218.31.200.249:92/pc/layout/{date}/node_01B.html"
+        template = "https://www.yicai.com/epaper/pc/{date}/node_A01.html"
         for d in dates:
             yield FormRequest(template.format(date = d))
 
     rules = (
-       Rule(LinkExtractor(allow=('node.*\.html'), restrict_xpaths="//div[@class='nav-list']")),
-       Rule(LinkExtractor(allow=('content.*\.html'), restrict_xpaths="//div[@class='news-list']"), callback="parse_item")
+       Rule(LinkExtractor(allow=('node.*\.html'), restrict_xpaths="//div[@class='Therestlist']")),
+       Rule(LinkExtractor(allow=('content.*\.html'), restrict_xpaths="//div[@class='newslist']"), callback="parse_item")
     )
     
     def parse_item(self, response):
         try:
-            title = response.xpath("//*[@class='totalTitle']").xpath("string(.)").get()
-            content1 = response.xpath("//div[@class='attachment']//*[@class='img_text']").xpath("string(.)").get()
-            content2 = response.xpath("//founder-content").xpath('string(.)').get()
-            content = content1 + content2
-            url = response.url
-            date = re.search('cont/(\d{6}/\d{2})/', url).group(1)
-            date = '-'.join([date[0:4], date[4:6], date[7:9]])
-            imgs = response.xpath("//div[@class='attachment']//img/@src").getall()
-            imgs = [parse.urljoin(url, imgurl) for imgurl in imgs]
             html  =response.text
+            url = response.url
+            title = response.xpath("//div[@class='newsdetatit']//h3").xpath("string(.)").get()
+            content = response.xpath("//founder-content").xpath('string(.)').get()
+            date = re.search('pc/(\d{6}/\d{2})/', url).group(1)
+            date = '-'.join([date[0:4], date[4:6], date[7:9]])
+            imgs = response.xpath("//div[@class='newsdetatext']//img/@src").getall()
+            imgs = [parse.urljoin(url, imgurl) for imgurl in imgs]
         except Exception as e:
             return
         
@@ -44,8 +42,7 @@ class mySpider(CrawlSpider):
         item['content'] = content
         item['date'] = date
         item['imgs'] = imgs
-        item['url'] = url
+        item['url'] = response.url
         item['newspaper'] = self.newspapers
         item['html'] = html
         yield item
-

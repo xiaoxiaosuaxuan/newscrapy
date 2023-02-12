@@ -9,32 +9,33 @@ from urllib import parse
 
 
 class mySpider(CrawlSpider):
-    name = "guangzhoudaily"
-    newspapers = "广州日报"
-    allowed_domains = ['gzdaily.dayoo.com']
+    name = "guojijinrongbao"
+    newspapers = "国际金融报"
+    allowed_domains = ['paper.people.com.cn']
 
-    
-    def start_requests(self):    
+    def start_requests(self):
         dates = dateGen(self.start, self.end, "%Y-%m/%d")
-        template = "https://gzdaily.dayoo.com/pc/html/{date}/node_1.htm"
+        template = "http://paper.people.com.cn/gjjrb/html/{date}/node_645.htm"
         for d in dates:
             yield FormRequest(template.format(date = d))
 
     rules = (
-        Rule(LinkExtractor(allow=('node\w+\.htm'))),
-        Rule(LinkExtractor(allow=('content\w+\.htm')), callback="parse_item")
+       Rule(LinkExtractor(allow=('node.*\.htm'), restrict_xpaths="//div[@class='swiper-box']")),
+       Rule(LinkExtractor(allow=('content.*\.htm'), restrict_xpaths="//div[@class='news']"), callback="parse_item")
     )
-
+    
     def parse_item(self, response):
         try:
-            title = response.xpath("//founder-title").xpath("string(.)").get()
-            content = response.xpath("//founder-content").xpath("string(.)").get()
             url = response.url
-            date = re.search('html/(\d+-\d+/\d+)/content', url).group(1)
+            html  =response.text
+            response = response.xpath("//div[@class='article']")
+            title = response.xpath("//h1").xpath("string(.)").get()
+            content = response.xpath("//div[@id='ozoom']//p").xpath('string(.)').getall()
+            content = "".join(content)
+            date = re.search('html/(\d{4}-\d{2}/\d{2})/', url).group(1)
             date = '-'.join([date[0:4], date[5:7], date[8:10]])
-            imgs = response.xpath("//table[@id='newspic']//img/@src").getall()
+            imgs = response.xpath("//table[@class='pci_c']//img/@src").getall()
             imgs = [parse.urljoin(url, imgurl) for imgurl in imgs]
-            html = response.text
         except Exception as e:
             return
         
@@ -43,7 +44,7 @@ class mySpider(CrawlSpider):
         item['content'] = content
         item['date'] = date
         item['imgs'] = imgs
-        item['url'] = response.url
+        item['url'] = url
         item['newspaper'] = self.newspapers
         item['html'] = html
         yield item

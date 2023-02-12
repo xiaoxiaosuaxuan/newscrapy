@@ -9,32 +9,31 @@ from urllib import parse
 
 
 class mySpider(CrawlSpider):
-    name = "guangzhoudaily"
-    newspapers = "广州日报"
-    allowed_domains = ['gzdaily.dayoo.com']
+    name = "shanghaifazhibao"
+    newspapers = "上海法治报"
+    allowed_domains = ['www.shfzb.com.cn']
 
-    
-    def start_requests(self):    
+    def start_requests(self):
         dates = dateGen(self.start, self.end, "%Y-%m/%d")
-        template = "https://gzdaily.dayoo.com/pc/html/{date}/node_1.htm"
+        template = "http://www.shfzb.com.cn/html/{date}/node_3186.html"
         for d in dates:
             yield FormRequest(template.format(date = d))
 
     rules = (
-        Rule(LinkExtractor(allow=('node\w+\.htm'))),
-        Rule(LinkExtractor(allow=('content\w+\.htm')), callback="parse_item")
+       Rule(LinkExtractor(allow=('node.*\.html'), restrict_xpaths="//*[@id='table64']")),
+       Rule(LinkExtractor(allow=('content.*\.html'), restrict_xpaths="//*[@id='table61']"), callback="parse_item")
     )
-
+    
     def parse_item(self, response):
         try:
-            title = response.xpath("//founder-title").xpath("string(.)").get()
-            content = response.xpath("//founder-content").xpath("string(.)").get()
+            title = response.xpath("//p[@class='title1']").xpath("string(.)").get()
+            content = response.xpath("//div[@id='ozoom']").xpath('string(.)').get()
             url = response.url
-            date = re.search('html/(\d+-\d+/\d+)/content', url).group(1)
+            date = re.search('html/(\d{4}-\d{2}/\d{2})/', url).group(1)
             date = '-'.join([date[0:4], date[5:7], date[8:10]])
-            imgs = response.xpath("//table[@id='newspic']//img/@src").getall()
+            imgs = response.xpath("//div[@class='wztp']//img/@src").getall()
             imgs = [parse.urljoin(url, imgurl) for imgurl in imgs]
-            html = response.text
+            html  =response.text
         except Exception as e:
             return
         

@@ -9,27 +9,30 @@ from urllib import parse
 
 
 class mySpider(CrawlSpider):
-    name = "tuanjiebao"
-    newspapers = "团结报"
-    allowed_domains = ['www.xxnet.com.cn']
+    name = "jilinnongcunbao"
+    newspapers = "吉林农村报"
+    allowed_domains = ['www.jlncb.cn']
     
     def start_requests(self):
         dates = dateGen(self.start, self.end, "%Y%m/%d")
-        template = "http://www.xxnet.com.cn/szb/tjbpc/{date}/l01.html"
+        template = "http://www.jlncb.cn/jlncb/pc/paper/layout/{date}/node_08.html"
         for d in dates:
             yield FormRequest(template.format(date = d))
 
     rules = (
-        Rule(LinkExtractor(allow=('tjbpc/\d+/\d+/l\d+.html'))),
-        Rule(LinkExtractor(allow=('tjbpc/\d+/\d+/c\d+.html')), callback="parse_item")
+        Rule(LinkExtractor(allow=('paper/layout/\d+/\d+/node\w+.html'))),
+        Rule(LinkExtractor(allow=('paper/c/\d+/\d+/content\w+.html')), callback="parse_item")
     )
 
     def parse_item(self, response):
         try:
-            title = response.xpath("//div[@class='totalTitle']").xpath("string(.)").get()
+            title0 = response.xpath("//p[@id='PreTitle']").xpath("string(.)").get()
+            title1 = response.xpath("//h2[@id='Title']").xpath("string(.)").get()
+            subtitle = response.xpath("//p[@id='SubTitle']").xpath("string(.)").get()
+            title = title0 + ' ' + title1 + ' ' + subtitle
             content = response.xpath("//div[@class='content']").xpath("string(.)").get()
             url = response.url
-            date = re.search("tjbpc/(\d+/\d+)/c", url).group(1)
+            date = re.search("c/(\d+/\d+)/content", url).group(1)
             date = '-'.join([date[0:4], date[4:6], date[7:9]])
             imgs = response.xpath("//div[@class='attachment']//img/@src").getall()
             imgs = [parse.urljoin(url, imgurl) for imgurl in imgs]
@@ -46,4 +49,3 @@ class mySpider(CrawlSpider):
         item['newspaper'] = self.newspapers
         item['html'] = html
         yield item
-

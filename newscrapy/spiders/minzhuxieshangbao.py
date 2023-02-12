@@ -9,29 +9,29 @@ from urllib import parse
 
 
 class mySpider(CrawlSpider):
-    name = "neimenggudaily"
-    newspapers = "内蒙古日报"
-    allowed_domains = ['szb.northnews.cn']
+    name = "minzhuxieshangbao"
+    newspapers = "民主协商报"
+    allowed_domains = ['szb.mzxsb.com']
     
     def start_requests(self):
-        dates = dateGen(self.start, self.end, "%Y-%m/%d")
-        template = "http://szb.northnews.cn/nmgrb/html/{date}/node_1.htm?v=1"
+        dates = dateGen(self.start, self.end, "%Y%m%d")
+        template = "http://szb.mzxsb.com/mzxsb/{date}/html/index.htm"
         for d in dates:
             yield FormRequest(template.format(date = d))
 
     rules = (
-        Rule(LinkExtractor(allow=('html/\d+-\d+/\d+/node\w+.htm'))),
-        Rule(LinkExtractor(allow=('html/\d+-\d+/\d+/content\w+.htm')), callback="parse_item")
+        Rule(LinkExtractor(allow=('mzxsb/\d+/html/index.htm'))),
+        Rule(LinkExtractor(allow=('mzxsb/\d+/html/content\w+.htm')), callback="parse_item")
     )
 
     def parse_item(self, response):
         try:
-            title = response.xpath("//td[@class='font01']//founder-title").xpath("string(.)").get()
-            content = response.xpath("//div[@class='content']//founder-content").xpath("string(.)").get()
+            title = response.xpath("//div[@class='bmnr_con_biaoti']").xpath("string(.)").get()
+            content = response.xpath("//div[@id='zoom']").xpath("string(.)").get()
             url = response.url
-            date = re.search("html/(\d+-\d+/\d+)/content", url).group(1)
-            date = '-'.join([date[0:4], date[5:7], date[8:10]])
-            imgs = response.xpath("//a[@class='pirobox_gall']//img/@src").getall()
+            date = re.search("mzxsb/(\d+)/html/content", url).group(1)
+            date = '-'.join([date[0:4], date[4:6], date[6:8]])
+            imgs = response.xpath("//div[@id='zoom']//img/@src").getall()
             imgs = [parse.urljoin(url, imgurl) for imgurl in imgs]
             html = response.text
         except Exception as e:

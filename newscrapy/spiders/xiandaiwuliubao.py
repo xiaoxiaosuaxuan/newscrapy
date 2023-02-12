@@ -9,29 +9,29 @@ from urllib import parse
 
 
 class mySpider(CrawlSpider):
-    name = "neimenggudaily"
-    newspapers = "内蒙古日报"
-    allowed_domains = ['szb.northnews.cn']
+    name = "xiandaiwuliubao"
+    newspapers = "现代物流报"
+    allowed_domains = ['news.xd56b.com']
     
     def start_requests(self):
-        dates = dateGen(self.start, self.end, "%Y-%m/%d")
-        template = "http://szb.northnews.cn/nmgrb/html/{date}/node_1.htm?v=1"
+        dates = dateGen(self.start, self.end, "%Y%m%d")
+        template = "http://news.xd56b.com/shtml/xdwlb/{date}/index.shtml"
         for d in dates:
             yield FormRequest(template.format(date = d))
 
     rules = (
-        Rule(LinkExtractor(allow=('html/\d+-\d+/\d+/node\w+.htm'))),
-        Rule(LinkExtractor(allow=('html/\d+-\d+/\d+/content\w+.htm')), callback="parse_item")
+        Rule(LinkExtractor(allow=('xdwlb/\d+/index.shtml'))),
+        Rule(LinkExtractor(allow=('xdwlb/\d+/\d+.shtml')), callback="parse_item")
     )
 
     def parse_item(self, response):
         try:
-            title = response.xpath("//td[@class='font01']//founder-title").xpath("string(.)").get()
-            content = response.xpath("//div[@class='content']//founder-content").xpath("string(.)").get()
+            title = response.xpath("//div[@class='f-20']").xpath("string(.)").get()
+            content = response.xpath("//div[@class='f-14 height-25']").xpath("string(.)").get()
             url = response.url
-            date = re.search("html/(\d+-\d+/\d+)/content", url).group(1)
-            date = '-'.join([date[0:4], date[5:7], date[8:10]])
-            imgs = response.xpath("//a[@class='pirobox_gall']//img/@src").getall()
+            date = re.search("xdwlb/(\d+)/\d+", url).group(1)
+            date = '-'.join([date[0:4], date[4:6], date[6:8]])
+            imgs = response.xpath("//div[@class='f-14 height-25']//img/@src").getall()
             imgs = [parse.urljoin(url, imgurl) for imgurl in imgs]
             html = response.text
         except Exception as e:

@@ -9,29 +9,29 @@ from urllib import parse
 
 
 class mySpider(CrawlSpider):
-    name = "neimenggudaily"
-    newspapers = "内蒙古日报"
-    allowed_domains = ['szb.northnews.cn']
+    name = "chongqingzhengxiebao"
+    newspapers = "重庆政协报"
+    allowed_domains = ['cqzxb.itlic.com']
     
     def start_requests(self):
         dates = dateGen(self.start, self.end, "%Y-%m/%d")
-        template = "http://szb.northnews.cn/nmgrb/html/{date}/node_1.htm?v=1"
+        template = "https://cqzxb.itlic.com/content/{date}/01"
         for d in dates:
             yield FormRequest(template.format(date = d))
 
     rules = (
-        Rule(LinkExtractor(allow=('html/\d+-\d+/\d+/node\w+.htm'))),
-        Rule(LinkExtractor(allow=('html/\d+-\d+/\d+/content\w+.htm')), callback="parse_item")
+        Rule(LinkExtractor(allow=('content/\d+-\d+/\d+/\d{2}'))),
+        Rule(LinkExtractor(allow=('content/\d+-\d+/\d+/\d+.html')), callback="parse_item")
     )
 
     def parse_item(self, response):
         try:
-            title = response.xpath("//td[@class='font01']//founder-title").xpath("string(.)").get()
-            content = response.xpath("//div[@class='content']//founder-content").xpath("string(.)").get()
+            title = response.xpath("//div[@style='font-size: 1.7em;font-family:'Microsoft YaHei','微软雅黑','黑体';line-height: 2.3em;text-align: center;color: #201f1f;']").xpath("string(.)").get()
+            content = response.xpath("//div[@id='newspapercontent']").xpath("string(.)").get()
             url = response.url
-            date = re.search("html/(\d+-\d+/\d+)/content", url).group(1)
+            date = re.search("content/(\d+-\d+/\d+)/\d{6}.html", url).group(1)
             date = '-'.join([date[0:4], date[5:7], date[8:10]])
-            imgs = response.xpath("//a[@class='pirobox_gall']//img/@src").getall()
+            imgs = response.xpath("//div[@id='newspapercontent']//img/@src").getall()
             imgs = [parse.urljoin(url, imgurl) for imgurl in imgs]
             html = response.text
         except Exception as e:

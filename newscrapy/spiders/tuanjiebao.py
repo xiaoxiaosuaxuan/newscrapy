@@ -46,3 +46,4 @@ class mySpider(CrawlSpider):
         item['newspaper'] = self.newspapers
         item['html'] = html
         yield item
+

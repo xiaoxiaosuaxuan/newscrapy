@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 from scrapy import FormRequest
 import re
@@ -12,7 +13,7 @@ class mySpider(CrawlSpider):
     name = "tachengdaily"
     newspapers = "塔城日报"
     allowed_domains = ['szb.tcxw.cc']
-    
+
     def start_requests(self):
         dates = dateGen(self.start, self.end, "%Y%m/%d")
         template = "http://szb.tcxw.cc/pc/layout/{date}/node_01.html"
@@ -26,6 +27,7 @@ class mySpider(CrawlSpider):
 
     def parse_item(self, response):
         try:
+
             title0 = response.xpath("//h3[@id='Title']").xpath("string(.)").get()
             subtitle = response.xpath("//p[@id='SubTitle']").xpath("string(.)").get()
             if subtitle != '':
@@ -51,3 +53,4 @@ class mySpider(CrawlSpider):
         item['newspaper'] = self.newspapers
         item['html'] = html
         yield item
+

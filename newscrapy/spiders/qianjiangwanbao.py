@@ -10,30 +10,30 @@ from urllib import parse
 
 
 class mySpider(CrawlSpider):
-    name = "changjidaily"
-    newspapers = "昌吉日报"
-    allowed_domains = ['218.31.200.249']
+    name = "qianjiangwanbao"
+    newspapers = "钱江晚报"
+    allowed_domains = ['qjwb.thehour.cn']
 
     
     def start_requests(self):    
-        dates = dateGen(self.start, self.end, "%Y%m/%d")
-        template = "http://218.31.200.249:92/pc/layout/{date}/node_01B.html"
+        dates = dateGen(self.start, self.end, "%Y-%m/%d")
+        template = "http://qjwb.thehour.cn/html/{date}/node_78.htm"
         for d in dates:
             yield FormRequest(template.format(date = d))
 
     rules = (
-        Rule(LinkExtractor(allow=(':92/pc/layout/\d+/\d+/node\w+.html'))),
-        Rule(LinkExtractor(allow=(':92/pc/cont/\d+/\d+/content\w+.html')), callback="parse_item")
+        Rule(LinkExtractor(allow=('html/\d+-\d+/\d+/node\w+.htm'))),
+        Rule(LinkExtractor(allow=('html/\d+-\d+/\d+/content\w+.htm')), callback="parse_item")
     )
 
     def parse_item(self, response):
         try:
-            title = response.xpath("//div[@class='totalTitle']").xpath("string(.)").get()
-            content = response.xpath("//div[@class='content']").xpath("string(.)").get()
+            title = response.xpath("//div[@class='main-article-alltitle']").xpath("string(.)").get()
+            content = response.xpath("//div[@class='main-article-con']").xpath("string(.)").get()
             url = response.url
-            date = re.search('cont/(\d+/\d+)/content', url).group(1)
+            date = re.search('html/(\d+-\d+/\d+)/content', url).group(1)
             date = '-'.join([date[0:4], date[5:7], date[8:10]])
-            imgs = response.xpath("//div[@class='attachment']//img/@src").getall()
+            imgs = response.xpath("//div[@class='main_ar_pic_text']//img/@src").getall()
             imgs = [parse.urljoin(url, imgurl) for imgurl in imgs]
             html = response.text
         except Exception as e:
@@ -48,5 +48,4 @@ class mySpider(CrawlSpider):
         item['newspaper'] = self.newspapers
         item['html'] = html
         yield item
-
 

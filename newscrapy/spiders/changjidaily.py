@@ -49,3 +49,4 @@ class mySpider(CrawlSpider):
         item['html'] = html
         yield item
 
+

@@ -20,10 +20,11 @@ class mySpider(CrawlSpider):
             yield FormRequest(template.format(date = d))
 
     rules = (
-        Rule(LinkExtractor(allow=('col/\d+/\d+/\w+.html'))),
-        Rule(LinkExtractor(allow=('content/\d+/\d+/\w+.html')), callback="parse_item")
+        Rule(LinkExtractor(allow=('col/\d+/\d+/node_\w+.html'))),
+        Rule(LinkExtractor(allow=('content/\d+/\d+/content_\w+.html')), callback="parse_item")
     )
-
+#https://paper.hehechengde.cn/cdwb/pc/col/202208/19/node_01.html
+#https://paper.hehechengde.cn/cdwb/pc/content/202208/19/content_20483.html
     def parse_item(self, response):
         try:
             title1 = response.xpath("//*[@id='PreTitle']").xpath('string(.)').get()

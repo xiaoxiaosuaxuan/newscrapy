@@ -18,10 +18,11 @@ class mySpider(CrawlSpider):
         template = "http://www.xtrb.cn/epaper/ncwb/pc/col/{date}/col_01.html"
         for d in dates:
             yield FormRequest(template.format(date = d))
-
+#http://www.xtrb.cn/epaper/ncwb/pc/content/202208/19/content_45034.html
+#http://www.xtrb.cn/epaper/ncwb/pc/col/202208/19/col_02.html
     rules = (
-        Rule(LinkExtractor(allow=('col/\d+/\d+/\w+.html'))),
-        Rule(LinkExtractor(allow=('content/\d+/\d+/\w+.html')), callback="parse_item")
+        Rule(LinkExtractor(allow=('col/\d+/\d+/col_\w+.html'))),
+        Rule(LinkExtractor(allow=('content/\d+/\d+/content_\w+.html')), callback="parse_item")
     )
 
     def parse_item(self, response):
@@ -29,7 +30,7 @@ class mySpider(CrawlSpider):
             title1 = response.xpath("//*[@id='PreTitle']").xpath('string(.)').get()
             title2 = response.xpath("//*[@id='Title']").xpath('string(.)').get()
             title = title1 + ' ' + title2
-            author=response.xpath("//*[@id='SubTitle']").xpath('string(.)').get()
+            # author=response.xpath("//*[@id='SubTitle']").xpath('string(.)').get()
             content = response.xpath("//founder-content").xpath('string(.)').get()
             url = response.url
             date = re.search("content/(\d+/\d+)/", url).group(1)
@@ -42,7 +43,7 @@ class mySpider(CrawlSpider):
         
         item = NewscrapyItem()
         item['title'] = title
-        item['author']=author
+        # item['author']=author
         item['content'] = content
         item['date'] = date
         item['imgs'] = imgs

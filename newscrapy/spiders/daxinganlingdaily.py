@@ -21,13 +21,13 @@ class mySpider(CrawlSpider):
 #http://paper.dxalrb.org.cn/dxalrb/pc/layout/202208/25/node_A01.html
 #http://paper.dxalrb.org.cn/dxalrb/pc/con/202208/25/content_5594.html
     rules = (
-        Rule(LinkExtractor(allow=('layout/\d+/\d+/node_\w+.html'))),
+        Rule(LinkExtractor(allow=('layout/\d+/\d+/node_A\w+.html'))),
         Rule(LinkExtractor(allow=('con/\d+/\d+/content_\w+.html')), callback="parse_item")
     )
 
     def parse_item(self, response):
         try:
-            title = response.xpath("//*[@id='ScroLeft']/div[1]/h3").xpath('string(.)').get()
+            title = response.xpath("//div[@class='newsdetatit']/h3").xpath('string(.)').get()
             content = response.xpath("//founder-content").xpath('string(.)').get()
             url = response.url
             date = re.search("con/(\d+/\d+)/", url).group(1)

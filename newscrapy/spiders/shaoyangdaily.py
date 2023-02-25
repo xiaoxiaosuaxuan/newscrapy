@@ -30,7 +30,7 @@ class mySpider(CrawlSpider):
             title2 = response.xpath("//*[@id='Title']").xpath('string(.)').get()
             title3 = response.xpath("//*[@id='SubTitle']").xpath('string(.)').get()
             title = title1 + ' ' + title2+' ' + title3
-            author=response.xpath("//*[@id='author']").xpath('string(.)').get()
+            # author=response.xpath("//*[@id='author']").xpath('string(.)').get()
             content = response.xpath("//founder-content").xpath('string(.)').get()
             url = response.url
             date = re.search("content/(\d+/\d+)/", url).group(1)
@@ -43,7 +43,7 @@ class mySpider(CrawlSpider):
         
         item = NewscrapyItem()
         item['title'] = title
-        item['author'] = author
+        # item['author'] = author
         item['content'] = content
         item['date'] = date
         item['imgs'] = imgs

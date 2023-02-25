@@ -9,33 +9,34 @@ from urllib import parse
 
 
 class mySpider(CrawlSpider):
-    name = "zhongyuanshangbao"
-    newspapers = "中原商报"
-    allowed_domains = ['szb.handannews.com.cn']
+    name = "chengshiwanbao"
+    newspapers = "城市晚报"
+    allowed_domains = ['www.cswbszb.com']
 
     
     def start_requests(self):    
         dates = dateGen(self.start, self.end, "%Y%m/%d")
-        template = "http://szb.handannews.com.cn/sbpaper/pc/layout/{date}/node_02.html"
+        template = "http://www.cswbszb.com/cswb/pc/paper/layout/{date}/node_A02.html"
         for d in dates:
             yield FormRequest(template.format(date = d))
-#http://szb.handannews.com.cn/sbpaper/pc/content/202112/31/content_99694.html
-#http://szb.handannews.com.cn/sbpaper/pc/layout/202112/31/node_02.html
+#http://www.cswbszb.com/cswb/pc/paper/layout/202212/16/node_A01.html
+#http://www.cswbszb.com/cswb/pc/paper/c/202212/16/content_118410.html
     rules = (
-        Rule(LinkExtractor(allow=('layout/\d+/\d+/node_\w+.html'))),
-        Rule(LinkExtractor(allow=('content/\d+/\d+/content_\w+.html')),callback="parse_item")
+        Rule(LinkExtractor(allow=('paper/layout/\d+/\d+/node_\w+.html'))),
+        Rule(LinkExtractor(allow=('paper/c/\d+/\d+/content_\w+.html')),callback="parse_item")
     )
 
     def parse_item(self, response):
         try:
-            title1 = response.xpath("//*[@class='intro']").xpath("string(.)").get()
-            title2 = response.xpath("//*[@id='ScroLeft']/div[1]/h3").xpath("string(.)").get()
-            title = title1+title2
+            title1 = response.xpath("//*[@id='PreTitle']").xpath('string(.)').get()
+            title2 = response.xpath("//*[@id='Title']").xpath('string(.)').get()
+            title3 = response.xpath("//*[@id='SubTitle']").xpath('string(.)').get()
+            title = title1 + ' ' + title2+ ' ' + title3
             content = response.xpath("//founder-content").xpath("string(.)").get()
             url = response.url
-            date = re.search('content/(\d+/\d+)/', url).group(1)
+            date = re.search('c/(\d+/\d+)/', url).group(1)
             date = '-'.join([date[0:4], date[4:6], date[7:9]])
-            imgs = response.xpath("//*[@class='newsdetatext']//img/@src").getall()
+            imgs = response.xpath("//div[@class='attachment']//img/@src").getall()
             imgs = [parse.urljoin(url, imgurl) for imgurl in imgs]
             html = response.text
         except Exception as e:

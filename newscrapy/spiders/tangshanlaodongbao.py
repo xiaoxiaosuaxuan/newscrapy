@@ -9,28 +9,28 @@ from urllib import parse
 
 
 class mySpider(CrawlSpider):
-    name = "xianyangdaily"
-    newspapers = "咸阳日报"
-    allowed_domains = ['epaper.sxxynews.com']
+    name = "tangshanlaodongbao"
+    newspapers = "唐山劳动日报"
+    allowed_domains = ['epaper.huanbohainews.com.cn']
 
     def start_requests(self):
         dates = dateGen(self.start, self.end, "%Y%m/%d")
-        template = "http://epaper.sxxynews.com/pc/layout/{date}/col01.htm"
+        template = "https://epaper.huanbohainews.com.cn/tsldrb/pc/col/{date}/node_3.html"
         for d in dates:
             yield FormRequest(template.format(date = d))
-#http://epaper.sxxynews.com/pc/layout/202204/18/col01.htm
-#http://epaper.sxxynews.com/pc/content/202204/18/c213112.html
+#https://epaper.huanbohainews.com.cn/tsldrb/pc/col/202302/22/node_3.html
+#https://epaper.huanbohainews.com.cn/tsldrb/pc/content/202302/22/content_57459.html
     rules = (
-        Rule(LinkExtractor(allow=('layout/\d+/\d+/col\w+'))),
-        Rule(LinkExtractor(allow=('content/\d+/\d+/c\w+')), callback="parse_item")
+        Rule(LinkExtractor(allow=('col/\d+/\d+/node_\w+.html'))),
+        Rule(LinkExtractor(allow=('content/\d+/\d+/content_\w+.html')), callback="parse_item")
     )
 
     def parse_item(self, response):
         try:
-            title1 = response.xpath("//*[@id='PreTitle']").xpath('string(.)').get()
-            title2 = response.xpath("//*[@id='Title']").xpath('string(.)').get()
-            title3 = response.xpath("//*[@id='SubTitle']").xpath('string(.)').get()
-            title = title1 + ' ' + title2+' '+title3
+            title1 = response.xpath("//p[@class='introtitle text-center']").xpath('string(.)').get()
+            title2 = response.xpath("//h2[@class='art-title text-center']").xpath('string(.)').get()
+            title3=response.xpath("//p[@class='subtitle text-center']").xpath('string(.)').get()
+            title = title1 + ' ' + title2 + ' ' + title3
             content = response.xpath("//founder-content").xpath('string(.)').get()
             url = response.url
             date = re.search("content/(\d+/\d+)/", url).group(1)

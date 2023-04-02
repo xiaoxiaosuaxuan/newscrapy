@@ -28,7 +28,7 @@ class mySpider(CrawlSpider):
     def parse_item(self, response):
         try:
             title = response.xpath("//*[@class='content_title']").xpath('string(.)').get()
-            author=response.xpath("//*[@class='others']").xpath('string(.)').get()
+            # author=response.xpath("//*[@class='others']").xpath('string(.)').get()
             content = response.xpath("//*[@id='pgcontent']").xpath('string(.)').get()
             url = response.url
             date = re.search("html/(\d+/\d+/\d+)/", url).group(1)
@@ -41,7 +41,7 @@ class mySpider(CrawlSpider):
 #       
         item = NewscrapyItem()
         item['title'] = title
-        item['author'] = author
+        # item['author'] = author
         item['content'] = content
         item['date'] = date
         item['imgs'] = imgs

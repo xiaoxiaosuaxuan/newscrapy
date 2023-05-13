@@ -11,11 +11,11 @@ from urllib import parse
 class mySpider(CrawlSpider):
     name = "binzhoudaily"
     newspapers = "滨州日报"
-    allowed_domains = ['paper.bzrb.net']
+    allowed_domains = ['epaper.bzrb.net']
 
     def start_requests(self):
         dates = dateGen(self.start, self.end, "%Y%m%d")
-        template = "http://paper.bzrb.net/bzrb/{date}/html/page_01.htm"
+        template = "http://epaper.bzrb.net/bzrb/{date}/html/page_01.htm"
         for d in dates:
             yield FormRequest(template.format(date=d))
 

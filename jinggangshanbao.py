@@ -9,27 +9,29 @@ from urllib import parse
 
 
 class mySpider(CrawlSpider):
-    name = "hainanbao"
-    newspapers = "海南报"
-    allowed_domains = ['hnrb.hinews.cn']
+    name = "jinggangshanbao"
+    newspapers = "井冈山报"
+    allowed_domains = ['szb.jgsdaily.com']
 
     def start_requests(self):
-        dates = dateGen(self.start, self.end, "%Y-%m/%d")
-        template = "http://hnrb.hinews.cn/html/{date}/node_58464.htm"
+        dates = dateGen(self.start, self.end, "%Y/%m/%d")
+        template = "http://szb.jgsdaily.com:9999/epaper/jgsb/html/{date}/01/default.htm"
         for d in dates:
-            yield FormRequest(template.format(date = d))
+            yield FormRequest(template.format(date=d))
 
     rules = (
-        Rule(LinkExtractor(allow=('html/\d+-\d+/\d+/node_\w+.htm'))),
-        Rule(LinkExtractor(allow=('html/\d+-\d+/\d+/content_\w+.htm')), callback="parse_item")
+        Rule(LinkExtractor(allow=('html/\d+/\d+/\d+/\w+/default.htm'))),
+        Rule(LinkExtractor(allow=('html/\d+/\d+/\d+/\w+/\w+.htm')), callback="parse_item")
     )
 
     def parse_item(self, response):
         try:
-            title = response.xpath("//td[@class='font01']").xpath("string(.)").get()
-            content = response.xpath("//founder-content").xpath("string(.)").getall()
+            title = response.xpath("//h2[@class='content_title']").xpath("string(.)").get()
+            # title2 = response.xpath("//div[@class='articleContent']").xpath("string(.)").get()
+            # title = title1 + ' ' + title2
+            content = response.xpath("//td[@align='center']").xpath('string(.)').get()
             url = response.url
-            date = re.search("html/(\d+-\d+/\d+)/", url).group(1)
+            date = re.search('html/(\d+/\d+/\d+)/', url).group(1)
             date = '-'.join([date[0:4], date[5:7], date[8:10]])
             imgs = response.xpath("//td[@align='center']//img/@src").getall()
             imgs = [parse.urljoin(url, imgurl) for imgurl in imgs]

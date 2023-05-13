@@ -9,29 +9,29 @@ from urllib import parse
 
 
 class mySpider(CrawlSpider):
-    name = "mudanwanbao"
-    newspapers = "牡丹晚报"
-    allowed_domains = ['epaper.hezeribao.com']
+    name = "jiangsugongrenbao"
+    newspapers = "江苏工人报"
+    allowed_domains = ['epaper.jsgrb.com']
 
     def start_requests(self):
-        dates = dateGen(self.start, self.end, "%Y%m%d")
-        template = "http://www.heze.cn/mdwb/pc/layout/{date}/node_A01.html"
+        dates = dateGen(self.start, self.end, "%Y-%m-%d")
+        template = "http://epaper.jsgrb.com/Media/jsgrb/{date}"
         for d in dates:
             yield FormRequest(template.format(date = d))
 
     rules = (
-        Rule(LinkExtractor(allow=('mdwb/\d+/vA\w+.shtml'))),
-        Rule(LinkExtractor(allow=('mdwb/\d+/\w+.shtml')), callback="parse_item")
+        Rule(LinkExtractor(allow=('Media/jsgrb/\d+-\d+-\d+.html'))),
+        Rule(LinkExtractor(allow=('Article/index/aid/\d+.html')), callback="parse_item")
     )
 
     def parse_item(self, response):
         try:
-            title = response.xpath("//*[@id='content']//h1").xpath('string(.)').get()
-            content = response.xpath("//div[@class='para").xpath('string(.)').get()
+            title = response.xpath("//p[@class='title']").xpath("string(.)").get()
+            content = response.xpath("//div[@class='txt']").xpath("string(.)").get()
             url = response.url
-            # date = re.search("pc/c/(\d+/\d+)/", url).group(1)
-            # date = '-'.join([date[0:4], date[4:6], date[7:9]])
-            imgs = response.xpath("//div[id='article_img_marquee']//img/@src").getall()
+            date = re.search('jsgrb/(\d+-\d+-\d+)/', url).group(1)
+            date = '-'.join([date[0:4], date[5:7], date[8:10]])
+            imgs = response.xpath("//div[@class='txt']//img/@src").getall()
             imgs = [parse.urljoin(url, imgurl) for imgurl in imgs]
             html = response.text
         except Exception as e:
@@ -40,7 +40,7 @@ class mySpider(CrawlSpider):
         item = NewscrapyItem()
         item['title'] = title
         item['content'] = content
-        # item['date'] = date
+        item['date'] = date
         item['imgs'] = imgs
         item['url'] = response.url
         item['newspaper'] = self.newspapers

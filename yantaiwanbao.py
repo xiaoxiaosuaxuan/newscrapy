@@ -11,7 +11,7 @@ from urllib import parse
 class mySpider(CrawlSpider):
     name = "yantaiwanbao"
     newspapers = "烟台晚报"
-    allowed_domains = ['www.shm.com.cn']
+    allowed_domains = ['shm.com.cn']
 
     def start_requests(self):
         dates = dateGen(self.start, self.end, "%Y%m/%d")

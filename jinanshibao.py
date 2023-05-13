@@ -26,8 +26,8 @@ class mySpider(CrawlSpider):
 
     def parse_item(self, response):
         try:
-            title = response.xpath("//div[@class='detail']//h2").xpath("string(.)").get()
-            content = response.xpath("//p[@align='left']").xpath("string(.)").getall()
+            title = response.xpath("//div[@class='pageInfo']").xpath("string(.)").get()
+            content = response.xpath("//div[@class='article']").xpath("string(.)").getall()
             # imgs = body.xpath(".//img/@src").getall()
             imgs = response.xpath("//div[@class='article']//img/@src").getall()
             url = response.url
